@@ -68,3 +68,84 @@ class EnrichRequest(BaseModel):
     customer_id: Optional[int] = None
     merchant_id: Optional[str] = None
     channel: Optional[str] = None
+
+
+# Simplified models for individual service APIs
+class ServiceRequestData(BaseModel):
+    """Simplified data model for individual service APIs"""
+    model_config = ConfigDict(extra="ignore")
+    first_name: str
+    last_name: str
+    email: EmailStr
+    ip: Optional[str] = None
+    phone: Optional[str] = None
+    city: Optional[str] = None
+    state: Optional[str] = None
+    zip: Optional[str] = None
+
+
+class EkataRequest(BaseModel):
+    """Request model for Ekata API"""
+    model_config = ConfigDict(extra="ignore")
+    request_id: str
+    data: ServiceRequestData
+
+
+class EmailageRequest(BaseModel):
+    """Request model for Emailage API"""
+    model_config = ConfigDict(extra="ignore")
+    request_id: str
+    data: ServiceRequestData
+
+
+# Response models
+class EkataResponseData(BaseModel):
+    """Response data echoing back request info"""
+    model_config = ConfigDict(extra="ignore")
+    fname: str
+    l_name: str
+    email: EmailStr
+    ip: Optional[str] = None
+    homephone: Optional[str] = None
+    workphone: Optional[str] = None
+    city: Optional[str] = None
+    state: Optional[str] = None
+    zip: Optional[str] = None
+
+
+class EkataPayload(BaseModel):
+    """Ekata risk assessment payload"""
+    model_config = ConfigDict(extra="ignore")
+    risk_score: int
+    first_name_match: bool
+    last_name_match: bool
+    email_risk: int
+    ip_risk: int
+    phone_risk: int
+
+
+class EkataResponse(BaseModel):
+    """Response model for Ekata API"""
+    model_config = ConfigDict(extra="ignore")
+    request_id: str
+    data: EkataResponseData
+    ekata_payload: EkataPayload
+
+
+class EmailagePayload(BaseModel):
+    """Emailage enrichment payload"""
+    model_config = ConfigDict(extra="ignore")
+    score: int
+    email_first_seen: str
+    email_last_seen: str
+    domain_exists: bool
+    disposable: bool
+    free_provider: bool
+
+
+class EmailageResponse(BaseModel):
+    """Response model for Emailage API"""
+    model_config = ConfigDict(extra="ignore")
+    request_id: str
+    data: ServiceRequestData
+    emailage_payload: EmailagePayload
