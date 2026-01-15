@@ -696,6 +696,365 @@
         "description": "Get Ekata enrichment data only"
       },
       "response": []
+    },
+    {
+      "name": "Ekata Service - Simplified API",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Response has correct structure\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData).to.have.property('request_id');",
+              "    pm.expect(jsonData).to.have.property('data');",
+              "    pm.expect(jsonData).to.have.property('ekata_payload');",
+              "});",
+              "",
+              "pm.test(\"Data fields are correct\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    var data = jsonData.data;",
+              "    pm.expect(data).to.have.property('fname');",
+              "    pm.expect(data).to.have.property('l_name');",
+              "    pm.expect(data).to.have.property('email');",
+              "    pm.expect(data).to.have.property('ip');",
+              "    pm.expect(data).to.have.property('homephone');",
+              "    pm.expect(data.fname).to.eql('John');",
+              "    pm.expect(data.l_name).to.eql('Doe');",
+              "});",
+              "",
+              "pm.test(\"Ekata payload has required fields\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    var payload = jsonData.ekata_payload;",
+              "    pm.expect(payload).to.have.property('risk_score');",
+              "    pm.expect(payload).to.have.property('first_name_match');",
+              "    pm.expect(payload).to.have.property('last_name_match');",
+              "    pm.expect(payload).to.have.property('email_risk');",
+              "    pm.expect(payload).to.have.property('ip_risk');",
+              "    pm.expect(payload).to.have.property('phone_risk');",
+              "});",
+              "",
+              "pm.test(\"Risk scores are valid\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    var payload = jsonData.ekata_payload;",
+              "    pm.expect(payload.risk_score).to.be.a('number');",
+              "    pm.expect(payload.risk_score).to.be.at.least(0);",
+              "    pm.expect(payload.risk_score).to.be.at.most(100);",
+              "    pm.expect(payload.email_risk).to.be.at.least(0);",
+              "    pm.expect(payload.email_risk).to.be.at.most(100);",
+              "});",
+              "",
+              "pm.test(\"Match fields are boolean\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    var payload = jsonData.ekata_payload;",
+              "    pm.expect(payload.first_name_match).to.be.a('boolean');",
+              "    pm.expect(payload.last_name_match).to.be.a('boolean');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"request_id\": \"req_ekata_simple_001\",\n  \"data\": {\n    \"first_name\": \"John\",\n    \"last_name\": \"Doe\",\n    \"email\": \"john.doe@example.com\",\n    \"ip\": \"192.168.1.100\",\n    \"phone\": \"+1-555-1234\",\n    \"city\": \"Seattle\",\n    \"state\": \"WA\",\n    \"zip\": \"98101\"\n  }\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/v1/ekata",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "v1",
+            "ekata"
+          ]
+        },
+        "description": "Simplified Ekata identity verification service - returns risk assessment for identity data"
+      },
+      "response": []
+    },
+    {
+      "name": "Emailage Service - Simplified API",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Response has correct structure\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData).to.have.property('request_id');",
+              "    pm.expect(jsonData).to.have.property('data');",
+              "    pm.expect(jsonData).to.have.property('emailage_payload');",
+              "});",
+              "",
+              "pm.test(\"Data fields are correct\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    var data = jsonData.data;",
+              "    pm.expect(data).to.have.property('first_name');",
+              "    pm.expect(data).to.have.property('last_name');",
+              "    pm.expect(data).to.have.property('email');",
+              "    pm.expect(data.first_name).to.eql('Jane');",
+              "    pm.expect(data.last_name).to.eql('Smith');",
+              "});",
+              "",
+              "pm.test(\"Emailage payload has required fields\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    var payload = jsonData.emailage_payload;",
+              "    pm.expect(payload).to.have.property('score');",
+              "    pm.expect(payload).to.have.property('email_first_seen');",
+              "    pm.expect(payload).to.have.property('email_last_seen');",
+              "    pm.expect(payload).to.have.property('domain_exists');",
+              "    pm.expect(payload).to.have.property('disposable');",
+              "    pm.expect(payload).to.have.property('free_provider');",
+              "});",
+              "",
+              "pm.test(\"Score is valid\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    var payload = jsonData.emailage_payload;",
+              "    pm.expect(payload.score).to.be.a('number');",
+              "    pm.expect(payload.score).to.be.at.least(0);",
+              "    pm.expect(payload.score).to.be.at.most(100);",
+              "});",
+              "",
+              "pm.test(\"Boolean fields are correct type\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    var payload = jsonData.emailage_payload;",
+              "    pm.expect(payload.domain_exists).to.be.a('boolean');",
+              "    pm.expect(payload.disposable).to.be.a('boolean');",
+              "    pm.expect(payload.free_provider).to.be.a('boolean');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"request_id\": \"req_emailage_simple_001\",\n  \"data\": {\n    \"first_name\": \"Jane\",\n    \"last_name\": \"Smith\",\n    \"email\": \"jane.smith@example.com\",\n    \"ip\": \"10.0.0.1\",\n    \"phone\": \"+1-555-5678\"\n  }\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/v1/emailage",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "v1",
+            "emailage"
+          ]
+        },
+        "description": "Simplified Emailage email risk assessment service - returns email reputation and history"
+      },
+      "response": []
+    },
+    {
+      "name": "Ekata Service - Minimal Fields",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Response has ekata_payload\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData).to.have.property('ekata_payload');",
+              "    pm.expect(jsonData.ekata_payload).to.have.property('risk_score');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"request_id\": \"req_ekata_min\",\n  \"data\": {\n    \"first_name\": \"Bob\",\n    \"last_name\": \"Jones\",\n    \"email\": \"bob@test.com\"\n  }\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/v1/ekata",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "v1",
+            "ekata"
+          ]
+        },
+        "description": "Test Ekata service with only required fields"
+      },
+      "response": []
+    },
+    {
+      "name": "Emailage Service - Minimal Fields",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Response has emailage_payload\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData).to.have.property('emailage_payload');",
+              "    pm.expect(jsonData.emailage_payload).to.have.property('score');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"request_id\": \"req_emailage_min\",\n  \"data\": {\n    \"first_name\": \"Alice\",\n    \"last_name\": \"Williams\",\n    \"email\": \"alice@test.com\"\n  }\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/v1/emailage",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "v1",
+            "emailage"
+          ]
+        },
+        "description": "Test Emailage service with only required fields"
+      },
+      "response": []
+    },
+    {
+      "name": "Ekata Service - Invalid Email",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 422\", function () {",
+              "    pm.response.to.have.status(422);",
+              "});",
+              "",
+              "pm.test(\"Validation error returned\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData).to.have.property('detail');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"request_id\": \"req_ekata_invalid\",\n  \"data\": {\n    \"first_name\": \"Test\",\n    \"last_name\": \"User\",\n    \"email\": \"not-an-email\"\n  }\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/v1/ekata",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "v1",
+            "ekata"
+          ]
+        },
+        "description": "Test validation error with invalid email format"
+      },
+      "response": []
+    },
+    {
+      "name": "Emailage Service - Invalid Email",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 422\", function () {",
+              "    pm.response.to.have.status(422);",
+              "});",
+              "",
+              "pm.test(\"Validation error returned\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData).to.have.property('detail');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"request_id\": \"req_emailage_invalid\",\n  \"data\": {\n    \"first_name\": \"Test\",\n    \"last_name\": \"User\",\n    \"email\": \"invalid-email\"\n  }\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/v1/emailage",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "v1",
+            "emailage"
+          ]
+        },
+        "description": "Test validation error with invalid email format"
+      },
+      "response": []
     }
   ],
   "variable": [

@@ -5,7 +5,7 @@ import json
 from datetime import datetime, timezone, timedelta
 from typing import Any, Dict, List, Optional
 
-from .models import EnrichRequest
+from .models import EnrichRequest, EkataRequest, EmailageRequest, EkataResponse, EkataResponseData, EkataPayload, EmailageResponse, EmailagePayload
 
 
 def _h(seed: str) -> int:
@@ -284,3 +284,84 @@ def enrich_with_ekata(req: EnrichRequest, dataset_row: Optional[Dict[str, Any]])
         },
         "enrichment": ekata_data
     }
+
+
+def _get_simple_seed(request_id: str, email: str, ip: str) -> str:
+    """Generate seed for simplified service requests"""
+    return f"{request_id}|{email}|{ip or '0.0.0.0'}"
+
+
+def enrich_ekata_service(req: EkataRequest) -> EkataResponse:
+    """Enrich with Ekata service using simplified request model"""
+    seed = _get_simple_seed(req.request_id, str(req.data.email), req.data.ip or "0.0.0.0")
+
+    # Generate risk scores
+    identity_confidence = _score_0_100(seed + "|ekata")
+    email_risk = _score_0_100(seed + "|email_risk")
+    ip_risk = _score_0_100(seed + "|ip_risk")
+    phone_risk = _score_0_100(seed + "|phone_risk")
+
+    # Generate match indicators
+    first_name_match = _bool(seed + "|fname_match", 75)
+    last_name_match = _bool(seed + "|lname_match", 72)
+
+    # Create response data (echo back with modified field names)
+    response_data = EkataResponseData(
+        fname=req.data.first_name,
+        l_name=req.data.last_name,
+        email=req.data.email,
+        ip=req.data.ip,
+        homephone=req.data.phone,
+        workphone=None,
+        city=req.data.city,
+        state=req.data.state,
+        zip=req.data.zip
+    )
+
+    # Create Ekata payload
+    ekata_payload = EkataPayload(
+        risk_score=identity_confidence,
+        first_name_match=first_name_match,
+        last_name_match=last_name_match,
+        email_risk=email_risk,
+        ip_risk=ip_risk,
+        phone_risk=phone_risk
+    )
+
+    return EkataResponse(
+        request_id=req.request_id,
+        data=response_data,
+        ekata_payload=ekata_payload
+    )
+
+
+def enrich_emailage_service(req: EmailageRequest) -> EmailageResponse:
+    """Enrich with Emailage service using simplified request model"""
+    seed = _get_simple_seed(req.request_id, str(req.data.email), req.data.ip or "0.0.0.0")
+    now = datetime.now(timezone.utc).replace(microsecond=0)
+
+    # Generate email history
+    first_seen_days_ago = 30 + (_h(seed + "|first_seen") % 2000)
+    last_seen_days_ago = _h(seed + "|last_seen") % 90
+
+    email_first_seen = (now - timedelta(days=first_seen_days_ago)).isoformat()
+    email_last_seen = (now - timedelta(days=last_seen_days_ago)).isoformat()
+
+    # Generate risk score
+    email_risk = _score_0_100(seed + "|emailage")
+
+    # Create Emailage payload
+    emailage_payload = EmailagePayload(
+        score=email_risk,
+        email_first_seen=email_first_seen,
+        email_last_seen=email_last_seen,
+        domain_exists=_bool(seed + "|domain", 92),
+        disposable=_bool(seed + "|disposable", 7),
+        free_provider=_bool(seed + "|free_provider", 55)
+    )
+
+    return EmailageResponse(
+        request_id=req.request_id,
+        data=req.data,
+        emailage_payload=emailage_payload
+    )

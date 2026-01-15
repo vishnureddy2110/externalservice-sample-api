@@ -7,13 +7,15 @@ from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from .models import EnrichRequest
+from .models import EnrichRequest, EkataRequest, EmailageRequest
 from .dataset import DatasetStore
 from .enrich import (
     normalize_response,
     enrich_with_emailage,
     enrich_with_threatmetrix,
-    enrich_with_ekata
+    enrich_with_ekata,
+    enrich_ekata_service,
+    enrich_emailage_service
 )
 
 load_dotenv()
@@ -70,6 +72,18 @@ def enrich_threatmetrix_endpoint(req: EnrichRequest):
 
 @app.post("/v1/enrich/ekata")
 def enrich_ekata(req: EnrichRequest):
-    """Enrich transaction with Ekata data only"""
+    """Enrich transaction with Ekata data only (legacy format)"""
     row = store.find(req.transaction_id, str(req.data.email))
     return enrich_with_ekata(req, row)
+
+
+@app.post("/v1/ekata")
+def ekata_service(req: EkataRequest):
+    """Ekata identity verification service with simplified request/response"""
+    return enrich_ekata_service(req)
+
+
+@app.post("/v1/emailage")
+def emailage_service(req: EmailageRequest):
+    """Emailage email risk assessment service with simplified request/response"""
+    return enrich_emailage_service(req)
