@@ -1,0 +1,54 @@
+[
+  {
+    "transaction": {
+      "transaction_id": "tx_1001",
+      "transaction_time": "2026-01-10T18:22:31Z",
+      "status": "Completed",
+      "decision": "APPROVE",
+      "amounts": { "total_amount": 42.19, "currency": "USD" },
+      "channel": "web",
+      "merchant": { "merchant_id": "M12345", "mcc": "4814", "country": "US" },
+      "payment": {
+        "card": { "bin": "411111", "last4": "1111", "network": "VISA" }
+      },
+      "network": { "ip": "73.14.55.10", "ip_country": "US", "ip_proxy": false }
+    },
+    "customer": {
+      "first_name": "vik",
+      "last_name": "Reddy",
+      "email": "vik@example.com",
+      "phone": "+1-555-0101",
+      "addresses": {
+        "billing": { "line1": "1 Main St", "city": "hyd", "state": "in", "zip": "50044", "country": "US" }
+      }
+    },
+    "external_services": {
+      "emailage": {
+        "score": 21,
+        "email_first_seen": "2019-07-10T00:00:00Z",
+        "email_last_seen": "2026-01-09T00:00:00Z",
+        "domain_exists": true,
+        "disposable": false,
+        "free_provider": true
+      },
+      "threatmetrix": {
+        "risk_score": 18,
+        "policy": "ALLOW",
+        "device_risk": 12,
+        "ip_risk": 9,
+        "true_ip": true,
+        "bot_detected": false
+      },
+      "ekata": {
+        "identity_confidence": 78,
+        "phone_to_name_match": true,
+        "address_to_name_match": true,
+        "email_to_name_match": true
+      }
+    },
+    "features": {
+      "velocity": { "email_24h": 1, "ip_24h": 2, "card_24h": 1 },
+      "lists": { "email_blacklisted": false, "ip_blacklisted": false }
+    }
+  }
+]
