@@ -1,0 +1,467 @@
+{
+  "info": {
+    "name": "Transaction Enrichment API",
+    "description": "API for enriching transaction data with external service information",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Health Check",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Response has correct structure\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData).to.have.property('status');",
+              "    pm.expect(jsonData).to.have.property('dataset_path');",
+              "    pm.expect(jsonData).to.have.property('dataset_count');",
+              "    pm.expect(jsonData).to.have.property('utc_now');",
+              "});",
+              "",
+              "pm.test(\"Status is ok\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.status).to.eql('ok');",
+              "});",
+              "",
+              "pm.test(\"Dataset count is valid\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.dataset_count).to.be.a('number');",
+              "    pm.expect(jsonData.dataset_count).to.be.at.least(0);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/health",
+          "host": ["{{base_url}}"],
+          "path": ["health"]
+        },
+        "description": "Check the health status of the API service"
+      },
+      "response": []
+    },
+    {
+      "name": "Enrich Transaction - Dataset Hit",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Response has correct structure\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData).to.have.property('request_id');",
+              "    pm.expect(jsonData).to.have.property('transaction_id');",
+              "    pm.expect(jsonData).to.have.property('transaction_time');",
+              "    pm.expect(jsonData).to.have.property('dataset_hit');",
+              "    pm.expect(jsonData).to.have.property('data');",
+              "    pm.expect(jsonData).to.have.property('transaction_payload');",
+              "});",
+              "",
+              "pm.test(\"Dataset hit is true\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.dataset_hit).to.be.true;",
+              "});",
+              "",
+              "pm.test(\"Transaction payload has required fields\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    var payload = jsonData.transaction_payload;",
+              "    pm.expect(payload).to.have.property('transaction');",
+              "    pm.expect(payload).to.have.property('customer');",
+              "    pm.expect(payload).to.have.property('external_services');",
+              "    pm.expect(payload).to.have.property('risk');",
+              "});",
+              "",
+              "pm.test(\"External services are present\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    var services = jsonData.transaction_payload.external_services;",
+              "    pm.expect(services).to.have.property('emailage');",
+              "    pm.expect(services).to.have.property('threatmetrix');",
+              "    pm.expect(services).to.have.property('ekata');",
+              "});",
+              "",
+              "pm.test(\"Risk score is calculated\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    var risk = jsonData.transaction_payload.risk;",
+              "    pm.expect(risk).to.have.property('blended_score');",
+              "    pm.expect(risk).to.have.property('recommended_action');",
+              "    pm.expect(risk.blended_score).to.be.a('number');",
+              "    pm.expect(risk.blended_score).to.be.at.least(0);",
+              "    pm.expect(risk.blended_score).to.be.at.most(100);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"request_id\": \"req_abc123\",\n  \"transaction_id\": \"tx_1001\",\n  \"transaction_time\": \"2026-01-14T05:22:31Z\",\n  \"data\": {\n    \"first_name\": \"Vishnu\",\n    \"last_name\": \"Reddy\",\n    \"email\": \"vik@example.com\",\n    \"ip\": \"73.14.55.10\",\n    \"phone\": \"+1-555-9999\",\n    \"city\": \"hyd\",\n    \"state\": \"in\",\n    \"zip\": \"50044\"\n  },\n  \"payment\": {\n    \"amount\": 42.19,\n    \"currency\": \"USD\",\n    \"card\": {\n      \"bin\": \"411111\",\n      \"last4\": \"1111\",\n      \"network\": \"VISA\",\n      \"expiry_month\": 12,\n      \"expiry_year\": 2028\n    }\n  },\n  \"merchant_id\": \"M12345\",\n  \"channel\": \"web\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/v1/enrich",
+          "host": ["{{base_url}}"],
+          "path": ["v1", "enrich"]
+        },
+        "description": "Enrich a transaction that exists in the dataset (tx_1001)"
+      },
+      "response": []
+    },
+    {
+      "name": "Enrich Transaction - Mock Data (No Dataset Hit)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Dataset hit is false\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.dataset_hit).to.be.false;",
+              "});",
+              "",
+              "pm.test(\"Mock data is generated\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.transaction_payload).to.have.property('external_services');",
+              "    pm.expect(jsonData.transaction_payload.external_services).to.have.property('emailage');",
+              "    pm.expect(jsonData.transaction_payload.external_services).to.have.property('threatmetrix');",
+              "    pm.expect(jsonData.transaction_payload.external_services).to.have.property('ekata');",
+              "});",
+              "",
+              "pm.test(\"Deterministic mock data\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    var services = jsonData.transaction_payload.external_services;",
+              "    pm.expect(services.emailage.score).to.be.a('number');",
+              "    pm.expect(services.threatmetrix.risk_score).to.be.a('number');",
+              "    pm.expect(services.ekata.identity_confidence).to.be.a('number');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"request_id\": \"req_xyz789\",\n  \"transaction_id\": \"tx_9999\",\n  \"transaction_time\": \"2026-01-14T10:30:00Z\",\n  \"data\": {\n    \"first_name\": \"John\",\n    \"last_name\": \"Doe\",\n    \"email\": \"john.doe@example.com\",\n    \"ip\": \"192.168.1.100\",\n    \"phone\": \"+1-555-1234\",\n    \"city\": \"New York\",\n    \"state\": \"NY\",\n    \"zip\": \"10001\"\n  },\n  \"payment\": {\n    \"amount\": 150.50,\n    \"currency\": \"USD\",\n    \"card\": {\n      \"bin\": \"424242\",\n      \"last4\": \"4242\",\n      \"network\": \"VISA\"\n    }\n  },\n  \"merchant_id\": \"M99999\",\n  \"channel\": \"mobile\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/v1/enrich",
+          "host": ["{{base_url}}"],
+          "path": ["v1", "enrich"]
+        },
+        "description": "Enrich a transaction that doesn't exist in dataset - should generate deterministic mock data"
+      },
+      "response": []
+    },
+    {
+      "name": "Enrich Transaction - Email Fallback Lookup",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Dataset hit via email lookup\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.dataset_hit).to.be.true;",
+              "});",
+              "",
+              "pm.test(\"Customer email matches\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.data.email).to.eql('vik@example.com');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"request_id\": \"req_email_lookup\",\n  \"transaction_id\": \"tx_9998\",\n  \"transaction_time\": \"2026-01-14T11:00:00Z\",\n  \"data\": {\n    \"first_name\": \"Test\",\n    \"last_name\": \"User\",\n    \"email\": \"vik@example.com\",\n    \"ip\": \"10.0.0.1\",\n    \"phone\": \"+1-555-5555\",\n    \"city\": \"Seattle\",\n    \"state\": \"WA\",\n    \"zip\": \"98101\"\n  }\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/v1/enrich",
+          "host": ["{{base_url}}"],
+          "path": ["v1", "enrich"]
+        },
+        "description": "Test email fallback lookup - different transaction_id but same email from dataset"
+      },
+      "response": []
+    },
+    {
+      "name": "Enrich Transaction - Minimal Required Fields",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Response structure is valid\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData).to.have.property('request_id');",
+              "    pm.expect(jsonData).to.have.property('transaction_payload');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"request_id\": \"req_minimal\",\n  \"transaction_id\": \"tx_min_001\",\n  \"transaction_time\": \"2026-01-14T12:00:00Z\",\n  \"data\": {\n    \"first_name\": \"Jane\",\n    \"last_name\": \"Smith\",\n    \"email\": \"jane.smith@example.com\"\n  }\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/v1/enrich",
+          "host": ["{{base_url}}"],
+          "path": ["v1", "enrich"]
+        },
+        "description": "Test with minimal required fields only"
+      },
+      "response": []
+    },
+    {
+      "name": "Enrich Transaction - With Full Address & Device",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Billing address is included\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    var customer = jsonData.transaction_payload.customer;",
+              "    pm.expect(customer.addresses).to.have.property('billing');",
+              "    pm.expect(customer.addresses.billing).to.have.property('line1');",
+              "});",
+              "",
+              "pm.test(\"Device info is included\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    var customer = jsonData.transaction_payload.customer;",
+              "    pm.expect(customer).to.have.property('device');",
+              "    pm.expect(customer.device).to.have.property('user_agent');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"request_id\": \"req_full_data\",\n  \"transaction_id\": \"tx_full_001\",\n  \"transaction_time\": \"2026-01-14T13:00:00Z\",\n  \"data\": {\n    \"first_name\": \"Alice\",\n    \"last_name\": \"Johnson\",\n    \"email\": \"alice.j@example.com\",\n    \"ip\": \"203.0.113.45\",\n    \"phone\": \"+1-555-7890\",\n    \"city\": \"San Francisco\",\n    \"state\": \"CA\",\n    \"zip\": \"94102\",\n    \"billing_address\": {\n      \"line1\": \"123 Market Street\",\n      \"line2\": \"Apt 4B\",\n      \"city\": \"San Francisco\",\n      \"state\": \"CA\",\n      \"zip\": \"94102\",\n      \"country\": \"US\"\n    },\n    \"shipping_address\": {\n      \"line1\": \"456 Oak Avenue\",\n      \"city\": \"Oakland\",\n      \"state\": \"CA\",\n      \"zip\": \"94601\",\n      \"country\": \"US\"\n    },\n    \"device\": {\n      \"user_agent\": \"Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X)\",\n      \"device_id\": \"device_12345\",\n      \"session_id\": \"session_67890\",\n      \"timezone\": \"America/Los_Angeles\",\n      \"language\": \"en-US\"\n    }\n  },\n  \"payment\": {\n    \"amount\": 299.99,\n    \"currency\": \"USD\",\n    \"card\": {\n      \"bin\": \"555555\",\n      \"last4\": \"4444\",\n      \"network\": \"MASTERCARD\",\n      \"expiry_month\": 6,\n      \"expiry_year\": 2027\n    }\n  },\n  \"customer_id\": 12345,\n  \"merchant_id\": \"M54321\",\n  \"channel\": \"mobile\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/v1/enrich",
+          "host": ["{{base_url}}"],
+          "path": ["v1", "enrich"]
+        },
+        "description": "Test with all optional fields populated including addresses and device info"
+      },
+      "response": []
+    },
+    {
+      "name": "Enrich Transaction - Invalid Email (Validation Error)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 422\", function () {",
+              "    pm.response.to.have.status(422);",
+              "});",
+              "",
+              "pm.test(\"Validation error returned\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData).to.have.property('detail');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"request_id\": \"req_invalid\",\n  \"transaction_id\": \"tx_invalid_001\",\n  \"transaction_time\": \"2026-01-14T14:00:00Z\",\n  \"data\": {\n    \"first_name\": \"Invalid\",\n    \"last_name\": \"Email\",\n    \"email\": \"not-an-email\"\n  }\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/v1/enrich",
+          "host": ["{{base_url}}"],
+          "path": ["v1", "enrich"]
+        },
+        "description": "Test validation error with invalid email format"
+      },
+      "response": []
+    },
+    {
+      "name": "Enrich Transaction - Missing Required Fields",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 422\", function () {",
+              "    pm.response.to.have.status(422);",
+              "});",
+              "",
+              "pm.test(\"Validation error for missing fields\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData).to.have.property('detail');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"request_id\": \"req_missing\",\n  \"transaction_id\": \"tx_missing_001\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/v1/enrich",
+          "host": ["{{base_url}}"],
+          "path": ["v1", "enrich"]
+        },
+        "description": "Test validation error when required fields are missing"
+      },
+      "response": []
+    },
+    {
+      "name": "Enrich Transaction - High Risk Score",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Risk assessment is present\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    var risk = jsonData.transaction_payload.risk;",
+              "    pm.expect(risk).to.have.property('blended_score');",
+              "    pm.expect(risk).to.have.property('recommended_action');",
+              "    pm.expect(risk).to.have.property('reason_codes');",
+              "});",
+              "",
+              "pm.test(\"Recommended action is valid\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    var action = jsonData.transaction_payload.risk.recommended_action;",
+              "    pm.expect(['ALLOW', 'REVIEW']).to.include(action);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"request_id\": \"req_risk_test\",\n  \"transaction_id\": \"tx_risk_001\",\n  \"transaction_time\": \"2026-01-14T15:00:00Z\",\n  \"data\": {\n    \"first_name\": \"Risky\",\n    \"last_name\": \"Transaction\",\n    \"email\": \"risky@suspicious-domain.com\",\n    \"ip\": \"198.51.100.99\",\n    \"phone\": \"+1-555-0000\",\n    \"city\": \"Unknown\",\n    \"state\": \"XX\",\n    \"zip\": \"00000\"\n  },\n  \"payment\": {\n    \"amount\": 9999.99,\n    \"currency\": \"USD\",\n    \"card\": {\n      \"bin\": \"999999\",\n      \"last4\": \"9999\",\n      \"network\": \"UNKNOWN\"\n    }\n  }\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/v1/enrich",
+          "host": ["{{base_url}}"],
+          "path": ["v1", "enrich"]
+        },
+        "description": "Test risk scoring logic with potentially suspicious data"
+      },
+      "response": []
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8080",
+      "type": "string"
+    }
+  ]
+}
